@@ -8,6 +8,10 @@ export class OpenRouterService {
   }
 
   async chat(messages: { role: string; content: string }[]) {
+    if (!this.apiKey) {
+      throw new Error("OpenRouter API key not configured. AI features are disabled.");
+    }
+    
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",

@@ -19,6 +19,9 @@ export class SanctumGatewayService {
   }
 
   private getEndpoint(): string {
+    if (!this.apiKey) {
+      throw new Error("SANCTUM_GATEWAY_API_KEY not configured");
+    }
     return `https://tpg.sanctum.so/v1/${this.cluster}?apiKey=${this.apiKey}`;
   }
 

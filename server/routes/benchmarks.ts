@@ -181,6 +181,9 @@ export function createBenchmarkRouter(
       }
 
       // Build transaction without private key
+      if (!process.env.SANCTUM_GATEWAY_API_KEY) {
+        return res.status(503).json({ success: false, error: "SANCTUM_GATEWAY_API_KEY not configured" });
+      }
       const connection = new Connection(`https://tpg.sanctum.so/v1/mainnet?apiKey=${process.env.SANCTUM_GATEWAY_API_KEY}`);
       const fromPubkey = new PublicKey(fromAddress);
       const toPubkey = new PublicKey(toAddress);

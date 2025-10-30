@@ -68,6 +68,14 @@ authRouter.post('/login', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors[0].message });
     }
+    
+    // Log error for debugging
+    console.error('[Auth] Login error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack?.substring(0, 200),
+    });
+    
     res.status(401).json({ error: error.message || 'Authentication failed' });
   }
 });

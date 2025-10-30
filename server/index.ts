@@ -16,6 +16,9 @@ export const autoPilot = new AutoPilot(storage);
 
 const app = express();
 
+// Trust proxy for Railway (required for rate limiting behind proxy)
+app.set('trust proxy', 1);
+
 // Session store using PostgreSQL
 const PgSession = connectPgSimple(session);
 
@@ -91,10 +94,25 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    let message = err.message || "Internal Server Error";
+    
+    // Handle Node.js URL errors more gracefully
+    if (message.includes("Invalid URL") || err.code === "ERR_INVALID_URL") {
+      message = `Invalid URL configuration: ${err.message || "Check environment variables"}`;
+    }
 
-    res.status(status).json({ message });
-    throw err;
+    console.error("[Error Handler]", {
+      status,
+      message,
+      code: err.code,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
+
+    res.status(status).json({ error: message });
+    // Don't re-throw in production to prevent crashes
+    if (process.env.NODE_ENV !== "production") {
+      throw err;
+    }
   });
 
   // importantly only setup vite in development and after
