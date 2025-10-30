@@ -90,41 +90,57 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    let message = err.message || "Internal Server Error";
-    
-    // Handle Node.js URL errors more gracefully
-    if (message.includes("Invalid URL") || err.code === "ERR_INVALID_URL") {
-      message = `Invalid URL configuration: ${err.message || "Check environment variables"}`;
+  try {
+    // Check required environment variables early
+    if (!process.env.DATABASE_URL) {
+      log("[FATAL] DATABASE_URL is not set!");
+      log("[FATAL] Please go to Railway Dashboard → Service → Variables");
+      log("[FATAL] Add Variable Reference: Name=DATABASE_URL, Reference=Database Service → DATABASE_URL");
+      process.exit(1);
     }
 
-    console.error("[Error Handler]", {
-      status,
-      message,
-      code: err.code,
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+      log("[FATAL] SESSION_SECRET is not set in production!");
+      log("[FATAL] Please add SESSION_SECRET in Railway Variables");
+      process.exit(1);
+    }
+
+    log("[Server] Environment variables OK, starting server...");
+    const server = await registerRoutes(app);
+
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      let message = err.message || "Internal Server Error";
+      
+      // Handle Node.js URL errors more gracefully
+      if (message.includes("Invalid URL") || err.code === "ERR_INVALID_URL") {
+        message = `Invalid URL configuration: ${err.message || "Check environment variables"}`;
+      }
+
+      console.error("[Error Handler]", {
+        status,
+        message,
+        code: err.code,
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      });
+
+      res.status(status).json({ error: message });
+      // Don't re-throw in production to prevent crashes
+      if (process.env.NODE_ENV !== "production") {
+        throw err;
+      }
     });
 
-    res.status(status).json({ error: message });
-    // Don't re-throw in production to prevent crashes
-    if (process.env.NODE_ENV !== "production") {
-      throw err;
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
     }
-  });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
+    // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
@@ -210,4 +226,28 @@ app.use((req, res, next) => {
       }
     }, 3000);
   });
+  } catch (error: any) {
+    log(`[FATAL] Server startup failed: ${error.message || error}`);
+    if (error.stack) {
+      log(`[FATAL] Stack: ${error.stack}`);
+    }
+    log("[FATAL] Please check Railway logs for details");
+    process.exit(1);
+  }
 })();
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (error: any) => {
+  log(`[FATAL] Unhandled rejection: ${error.message || error}`);
+  if (error.stack) {
+    log(`[FATAL] Stack: ${error.stack}`);
+  }
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  log(`[FATAL] Uncaught exception: ${error.message}`);
+  log(`[FATAL] Stack: ${error.stack}`);
+  process.exit(1);
+});
