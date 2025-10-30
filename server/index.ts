@@ -140,29 +140,38 @@ app.use((req, res, next) => {
     setTimeout(async () => {
       try {
         const adminEmail = "admin@observatory.dev";
-        const existingAdmin = await storage.getUserByEmail(adminEmail);
+        const adminPassword = "Observatory2024!";
         
-        if (!existingAdmin) {
-          log("[Server] Creating default admin account...");
-          const passwordHash = await bcrypt.hash("Observatory2024!", 10);
-          const adminUser: InsertUser = {
-            email: adminEmail,
-            passwordHash,
-            name: "Observatory Admin",
-            role: "admin",
-            isActive: true,
-          };
-          await storage.createUser(adminUser);
-          log("[Server] ✅ Default admin account created!");
-          log(`[Server] Email: ${adminEmail}`);
-          log("[Server] Password: Observatory2024!");
-        } else {
-          log("[Server] Default admin account already exists");
+        try {
+          const existingAdmin = await storage.getUserByEmail(adminEmail);
+          
+          if (!existingAdmin) {
+            log("[Server] Creating default admin account...");
+            const passwordHash = await bcrypt.hash(adminPassword, 10);
+            const adminUser: InsertUser = {
+              email: adminEmail,
+              passwordHash,
+              name: "Observatory Admin",
+              role: "admin",
+              isActive: true,
+            };
+            await storage.createUser(adminUser);
+            log("[Server] ✅ Default admin account created!");
+            log(`[Server] Email: ${adminEmail}`);
+            log(`[Server] Password: ${adminPassword}`);
+          } else {
+            log("[Server] Default admin account already exists");
+            log(`[Server] Login with: ${adminEmail} / ${adminPassword}`);
+          }
+        } catch (dbError: any) {
+          log(`[Server] Database error creating admin: ${dbError.message || dbError}`);
+          log(`[Server] ⚠️  Admin account not created. You can register at /auth/register`);
         }
-      } catch (error) {
-        log(`[Server] Error creating admin account: ${error}`);
+      } catch (error: any) {
+        log(`[Server] Error in admin account setup: ${error.message || error}`);
+        log(`[Server] ⚠️  Please register manually at /auth/register`);
       }
-    }, 1000);
+    }, 2000); // Increased delay to ensure database is ready
     
     // Initialize transaction simulator and alert monitoring
     setTimeout(async () => {
