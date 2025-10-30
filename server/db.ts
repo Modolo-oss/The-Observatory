@@ -5,9 +5,12 @@ import * as schema from "@shared/schema";
 
 neonConfig.webSocketConstructor = ws;
 
-if (!process.env.DATABASE_URL) {
+// Try DATABASE_PUBLIC_URL first (IPv4, works better in Railway), fallback to DATABASE_URL
+const databaseUrl = process.env.DATABASE_PUBLIC_URL || process.env.DATABASE_URL;
+
+if (!databaseUrl) {
   const errorMessage = [
-    "❌ DATABASE_URL is not set!",
+    "❌ DATABASE_URL or DATABASE_PUBLIC_URL is not set!",
     "",
     "📋 SOLUTION:",
     "1. Go to Railway Dashboard",
@@ -15,16 +18,20 @@ if (!process.env.DATABASE_URL) {
     "3. Click 'Variables' tab",
     "4. Click 'New Variable'",
     "5. Choose 'Add Variable Reference'",
-    "6. Name: DATABASE_URL",
-    "7. Reference: Select your Database Service → DATABASE_URL",
+    "6. Name: DATABASE_PUBLIC_URL (preferred) or DATABASE_URL",
+    "7. Reference: Select your Database Service → DATABASE_PUBLIC_URL or DATABASE_URL",
     "8. Save and wait for redeploy",
     "",
+    "💡 TIP: DATABASE_PUBLIC_URL works better with IPv4 connections!",
     "⚠️  IMPORTANT: Variables must be set at SERVICE level, not PROJECT level!"
   ].join("\n");
   
   console.error(errorMessage);
-  throw new Error("DATABASE_URL must be set. See error message above for instructions.");
+  throw new Error("DATABASE_URL or DATABASE_PUBLIC_URL must be set. See error message above for instructions.");
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Log which URL is being used (without exposing the actual URL)
+console.log(`[DB] Using ${process.env.DATABASE_PUBLIC_URL ? 'DATABASE_PUBLIC_URL' : 'DATABASE_URL'} for database connection`);
+
+export const pool = new Pool({ connectionString: databaseUrl });
 export const db = drizzle({ client: pool, schema });
