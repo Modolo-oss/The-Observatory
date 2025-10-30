@@ -1,0 +1,50 @@
+
+> rest-express@1.0.0 dev
+[SanctumGateway] Running in LIVE mode with real API (mainnet)
+10:15:11 PM [express] serving on port 5000
+10:15:13 PM [express] [Server] Default admin account already exists
+10:15:15 PM [express] [Server] Checking for existing transactions...
+10:15:19 PM [express] [Server] Transactions already exist, skipping historical generation
+10:15:19 PM [express] [Server] Transaction simulator DISABLED (set ENABLE_SIMULATOR=true to enable)
+10:15:19 PM [express] [Server] Transactions will only be created via Public API or manual submission
+[AlertMonitor] Starting (interval: 60000ms)...
+10:15:19 PM [express] [Server] Alert monitor started
+ValidationError: The 'X-Forwarded-For' header is set but the Express 'trust proxy' setting is false (default). This could indicate a misconfiguration which would prevent express-rate-limit from accurately identifying users. See https://express-rate-limit.github.io/ERR_ERL_UNEXPECTED_X_FORWARDED_FOR/ for more information.
+    at Object.xForwardedForHeader (file:///home/runner/workspace/node_modules/.pnpm/express-rate-limit@8.1.0_express@4.21.2/node_modules/express-rate-limit/dist/index.mjs:337:13)
+    at wrappedValidations.<computed> [as xForwardedForHeader] (file:///home/runner/workspace/node_modules/.pnpm/express-rate-limit@8.1.0_express@4.21.2/node_modules/express-rate-limit/dist/index.mjs:609:22)
+    at Object.keyGenerator (file:///home/runner/workspace/node_modules/.pnpm/express-rate-limit@8.1.0_express@4.21.2/node_modules/express-rate-limit/dist/index.mjs:711:20)
+    at file:///home/runner/workspace/node_modules/.pnpm/express-rate-limit@8.1.0_express@4.21.2/node_modules/express-rate-limit/dist/index.mjs:772:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///home/runner/workspace/node_modules/.pnpm/express-rate-limit@8.1.0_express@4.21.2/node_modules/express-rate-limit/dist/index.mjs:753:5 {
+  code: 'ERR_ERL_UNEXPECTED_X_FORWARDED_FOR',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_UNEXPECTED_X_FORWARDED_FOR/'
+}
+10:15:30 PM [express] POST /api/auth/login 200 in 143ms :: {"user":{"id":"4f784a06-6518-4be0-af00-304…
+10:15:31 PM [express] GET /api/ai/insights/recent 304 in 55ms :: [{"id":"3d9ca72d-e8c4-4bed-b373-b7d7…
+10:15:31 PM [express] GET /api/dashboard/metrics 304 in 55ms :: {"successRate":"0.0%","avgConfirmatio…
+10:15:31 PM [express] GET /api/autopilot/status 304 in 35ms :: {"isActive":false,"lastOptimization":n…
+10:15:31 PM [express] GET /api/transactions/recent 304 in 75ms :: [{"id":"79d2cb76-2823-49bc-b717-ef6…
+WebSocket client connected
+10:15:41 PM [express] GET /api/autopilot/status 304 in 72ms :: {"isActive":false,"lastOptimization":n…
+WebSocket client disconnected
+[PublicAPI] Building Gateway transaction with tip instructions
+[SanctumGateway] Building Gateway transaction
+[SanctumGateway] Endpoint: https://tpg.sanctum.so/v1/mainnet?apiKey=01K8HMCYMFBA3FT0RSWW0C68KV
+[SanctumGateway] Request body: {"id":"build-gateway-tx","jsonrpc":"2.0","method":"buildGatewayTransaction","params":["AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAED5+8PzPoRb1eLejA6VhYmb...
+[SanctumGateway] Response: {"jsonrpc":"2.0","id":null,"error":{"code":-32600,"message":"Invalid request body","data":{"gatewayErrorCode":"BAD_REQUEST"}}}...
+[SanctumGateway] JSON-RPC error: {
+  "code": -32600,
+  "message": "Invalid request body",
+  "data": {
+    "gatewayErrorCode": "BAD_REQUEST"
+  }
+}
+[SanctumGateway] buildGatewayTransaction failed: Error: Gateway RPC error: Invalid request body
+    at SanctumGatewayService.buildGatewayTransaction (/home/runner/workspace/server/services/sanctum-gateway.ts:101:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes/public-api.ts:192:20)
+[PublicAPI] Build transaction error: Error: Gateway RPC error: Invalid request body
+    at SanctumGatewayService.buildGatewayTransaction (/home/runner/workspace/server/services/sanctum-gateway.ts:101:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes/public-api.ts:192:20)
+10:16:10 PM [express] POST /api/public/transactions/build 500 in 1023ms :: {"success":false,"error":"…

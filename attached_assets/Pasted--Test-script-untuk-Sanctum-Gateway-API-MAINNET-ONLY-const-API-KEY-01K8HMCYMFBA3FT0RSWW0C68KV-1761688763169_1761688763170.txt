@@ -1,0 +1,294 @@
+// Test script untuk Sanctum Gateway API - MAINNET ONLY
+const API_KEY = "01K8HMCYMFBA3FT0RSWW0C68KV";
+const GATEWAY_URL = `https://tpg.sanctum.so/v1/mainnet?apiKey=${API_KEY}`;
+
+// Test 1: getTipInstructions - Method paling sederhana untuk testing
+async function testGetTipInstructions() {
+  console.log("\n" + "=".repeat(60));
+  console.log("TEST 1: getTipInstructions");
+  console.log("=".repeat(60));
+  
+  const requestBody = {
+    id: "test-tip-instructions",
+    jsonrpc: "2.0",
+    method: "getTipInstructions",
+    params: [{
+      feePayer: "11111111111111111111111111111111", // Dummy Solana address
+      // Optional parameters:
+      // jitoTipRange: "low" | "medium" | "high" | "max"
+      // deliveryMethodType: "rpc" | "jito" | "sanctum-sender" | "helius-sender"
+    }]
+  };
+  
+  console.log("📤 Request:");
+  console.log(JSON.stringify(requestBody, null, 2));
+  
+  try {
+    const response = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const data = await response.json();
+    
+    console.log(`\n📥 Response (${response.status} ${response.statusText}):`);
+    console.log(JSON.stringify(data, null, 2));
+    
+    if (data.result) {
+      console.log("\n✅ SUCCESS: Gateway mengembalikan tip instructions");
+      console.log(`   - Jumlah instruksi: ${data.result.length}`);
+      data.result.forEach((instr, idx) => {
+        console.log(`   - Instruction ${idx + 1}:`);
+        console.log(`     Program: ${instr.programAddress}`);
+        console.log(`     Accounts: ${instr.accounts.length}`);
+        if (instr.accounts[1]) {
+          console.log(`     Tip Destination: ${instr.accounts[1].address}`);
+        }
+      });
+    } else if (data.error) {
+      console.log(`\n❌ ERROR: ${data.error.message}`);
+      console.log(`   Code: ${data.error.code}`);
+      if (data.error.data) {
+        console.log(`   Gateway Error: ${data.error.data.gatewayErrorCode}`);
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`\n❌ EXCEPTION: ${error.message}`);
+    return null;
+  }
+}
+
+// Test 2: getTipInstructions dengan parameter tambahan
+async function testGetTipInstructionsWithParams() {
+  console.log("\n" + "=".repeat(60));
+  console.log("TEST 2: getTipInstructions dengan Custom Parameters");
+  console.log("=".repeat(60));
+  
+  const requestBody = {
+    id: "test-tip-with-params",
+    jsonrpc: "2.0",
+    method: "getTipInstructions",
+    params: [{
+      feePayer: "11111111111111111111111111111111",
+      jitoTipRange: "high",
+      deliveryMethodType: "jito"
+    }]
+  };
+  
+  console.log("📤 Request:");
+  console.log(JSON.stringify(requestBody, null, 2));
+  
+  try {
+    const response = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const data = await response.json();
+    
+    console.log(`\n📥 Response (${response.status} ${response.statusText}):`);
+    console.log(JSON.stringify(data, null, 2));
+    
+    if (data.result) {
+      console.log("\n✅ SUCCESS: Jito delivery method tip instructions");
+    } else if (data.error) {
+      console.log(`\n❌ ERROR: ${data.error.message}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`\n❌ EXCEPTION: ${error.message}`);
+    return null;
+  }
+}
+
+// Test 3: buildGatewayTransaction (akan error karena butuh transaksi valid)
+async function testBuildGatewayTransaction() {
+  console.log("\n" + "=".repeat(60));
+  console.log("TEST 3: buildGatewayTransaction (Expected to fail)");
+  console.log("=".repeat(60));
+  
+  const requestBody = {
+    id: "test-build-tx",
+    jsonrpc: "2.0",
+    method: "buildGatewayTransaction",
+    params: [
+      "dummy-base64-transaction", // Dummy transaction
+      {
+        encoding: "base64",
+        skipSimulation: true,
+        skipPriorityFee: false,
+        cuPriceRange: "medium",
+        jitoTipRange: "medium"
+      }
+    ]
+  };
+  
+  console.log("📤 Request:");
+  console.log(JSON.stringify(requestBody, null, 2));
+  console.log("\nℹ️  Note: Ini akan error karena menggunakan dummy transaction");
+  
+  try {
+    const response = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const data = await response.json();
+    
+    console.log(`\n📥 Response (${response.status} ${response.statusText}):`);
+    console.log(JSON.stringify(data, null, 2));
+    
+    if (data.error) {
+      console.log(`\n⚠️  EXPECTED ERROR: ${data.error.message}`);
+      console.log("   (Ini normal karena kita kirim dummy transaction)");
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`\n❌ EXCEPTION: ${error.message}`);
+    return null;
+  }
+}
+
+// Test 4: Invalid method (untuk konfirmasi error handling)
+async function testInvalidMethod() {
+  console.log("\n" + "=".repeat(60));
+  console.log("TEST 4: Invalid Method - getHealth");
+  console.log("=".repeat(60));
+  
+  const requestBody = {
+    id: "test-invalid",
+    jsonrpc: "2.0",
+    method: "getHealth"
+  };
+  
+  console.log("📤 Request:");
+  console.log(JSON.stringify(requestBody, null, 2));
+  console.log("\nℹ️  Note: getHealth bukan method yang valid di Gateway");
+  
+  try {
+    const response = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const data = await response.json();
+    
+    console.log(`\n📥 Response (${response.status} ${response.statusText}):`);
+    console.log(JSON.stringify(data, null, 2));
+    
+    if (data.error) {
+      console.log(`\n⚠️  EXPECTED ERROR: ${data.error.message}`);
+      console.log("   Gateway tidak mendukung method 'getHealth'");
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`\n❌ EXCEPTION: ${error.message}`);
+    return null;
+  }
+}
+
+// Test 5: Endpoint connectivity test
+async function testEndpointConnectivity() {
+  console.log("\n" + "=".repeat(60));
+  console.log("TEST 5: Endpoint Connectivity");
+  console.log("=".repeat(60));
+  
+  console.log(`Endpoint: ${GATEWAY_URL}`);
+  console.log(`API Key: ${API_KEY}`);
+  
+  try {
+    const startTime = Date.now();
+    const response = await fetch(GATEWAY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: "connectivity-test",
+        jsonrpc: "2.0",
+        method: "getTipInstructions",
+        params: [{ feePayer: "11111111111111111111111111111111" }]
+      })
+    });
+    const endTime = Date.now();
+    const latency = endTime - startTime;
+    
+    console.log(`\n✅ Endpoint reachable`);
+    console.log(`   Status: ${response.status} ${response.statusText}`);
+    console.log(`   Latency: ${latency}ms`);
+    console.log(`   Content-Type: ${response.headers.get('content-type')}`);
+    
+    return true;
+  } catch (error) {
+    console.error(`\n❌ Endpoint unreachable: ${error.message}`);
+    return false;
+  }
+}
+
+// Main test runner
+async function runAllTests() {
+  console.log("\n");
+  console.log("█".repeat(60));
+  console.log("🚀  SANCTUM GATEWAY API - MAINNET TESTING");
+  console.log("█".repeat(60));
+  console.log(`\nEndpoint: https://tpg.sanctum.so/v1/mainnet`);
+  console.log(`API Key: ${API_KEY}`);
+  console.log(`Time: ${new Date().toISOString()}`);
+  
+  const results = {
+    connectivity: false,
+    getTipInstructions: null,
+    getTipInstructionsWithParams: null,
+    buildGatewayTransaction: null,
+    invalidMethod: null
+  };
+  
+  // Run tests sequentially
+  results.connectivity = await testEndpointConnectivity();
+  
+  if (results.connectivity) {
+    results.getTipInstructions = await testGetTipInstructions();
+    await new Promise(resolve => setTimeout(resolve, 500)); // Rate limit protection
+    
+    results.getTipInstructionsWithParams = await testGetTipInstructionsWithParams();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    results.buildGatewayTransaction = await testBuildGatewayTransaction();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    results.invalidMethod = await testInvalidMethod();
+  }
+  
+  // Summary
+  console.log("\n");
+  console.log("█".repeat(60));
+  console.log("📊  TEST SUMMARY");
+  console.log("█".repeat(60));
+  
+  console.log(`\n✅ Endpoint Status: ${results.connectivity ? 'ONLINE' : 'OFFLINE'}`);
+  console.log(`✅ getTipInstructions: ${results.getTipInstructions?.result ? 'WORKING' : 'FAILED'}`);
+  console.log(`✅ getTipInstructions (Custom): ${results.getTipInstructionsWithParams?.result ? 'WORKING' : 'FAILED'}`);
+  console.log(`⚠️  buildGatewayTransaction: ${results.buildGatewayTransaction?.error ? 'EXPECTED ERROR' : 'UNEXPECTED'}`);
+  console.log(`⚠️  Invalid Method Test: ${results.invalidMethod?.error ? 'HANDLED CORRECTLY' : 'UNEXPECTED'}`);
+  
+  console.log("\n" + "█".repeat(60));
+  console.log("✨  TESTING COMPLETE");
+  console.log("█".repeat(60) + "\n");
+  
+  return results;
+}
+
+// Run all tests
+runAllTests().catch(error => {
+  console.error("\n💥 FATAL ERROR:", error);
+  process.exit(1);
+});
+
+

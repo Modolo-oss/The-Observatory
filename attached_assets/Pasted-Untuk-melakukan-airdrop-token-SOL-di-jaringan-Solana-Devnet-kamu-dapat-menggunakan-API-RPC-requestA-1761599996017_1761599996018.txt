@@ -1,0 +1,57 @@
+Untuk melakukan airdrop token SOL di jaringan Solana Devnet, kamu dapat menggunakan API RPC requestAirdrop, baik langsung (misal lewat cURL atau HTTP POST) maupun melalui SDK seperti solana/web3.js (JavaScript) atau Python. Di bawah ini contoh implementasi menggunakan beberapa metode populer:
+
+1. Menggunakan Solana Web3.js (JavaScript)
+javascript
+const SOLANA = require('@solana/web3.js');
+const { Connection, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl } = SOLANA;
+
+// Koneksi ke devnet
+const connection = new Connection(clusterApiUrl('devnet'));
+
+// Public key wallet yang ingin di-airdrop
+const walletAddress = 'YOUR_WALLET_ADDRESS';
+
+// Jumlah SOL dalam lamports (1 SOL = 1.000.000.000 lamports)
+const airdropAmount = 1 * LAMPORTS_PER_SOL;
+
+// Request airdrop
+(async () => {
+  const signature = await connection.requestAirdrop(
+    new PublicKey(walletAddress),
+    airdropAmount
+  );
+  console.log(`Tx Complete: https://explorer.solana.com/tx/${signature}?cluster=devnet`);
+})();
+Ganti 'YOUR_WALLET_ADDRESS' dengan alamat wallet tujuan.​
+
+2. Menggunakan cURL (langsung lewat API)
+bash
+curl https://api.devnet.solana.com \
+  -X POST \
+  -H "Content-Type: application/json" \
+  --data '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "requestAirdrop",
+    "params": ["YOUR_WALLET_ADDRESS", 1000000000]
+  }'
+Ganti "YOUR_WALLET_ADDRESS" dengan public key tujuan, dan angka 1000000000 adalah jumlah lamports untuk 1 SOL.​
+
+3. Menggunakan Python (solathon)
+python
+from solathon import Client, PublicKey
+from solathon.utils import sol_to_lamport
+
+client = Client("https://api.devnet.solana.com")
+public_key = PublicKey("YOUR_WALLET_ADDRESS")
+amount = sol_to_lamport(1)
+resp = client.request_airdrop(public_key, amount)
+print(resp)
+Pastikan sudah install solathon dengan pip install solathon.​
+
+Hal-hal penting
+Airdrop ini hanya berlaku di devnet, tidak di mainnet.
+
+Biasanya dibatasi jumlah/laju permintaan airdrop per wallet.
+
+Panduan di atas membantu memanggil airdrop SOL Devnet baik untuk develop atau pengujian.​

@@ -1,0 +1,91 @@
+Kenapa Fitur Ini Realistis
+1. Flexible Transaction Construction
+Seluruh “skenario nyata” seperti:
+
+Airdrop: Kirim SOL ke X wallet dari satu wallet.
+
+DEX Swap: Simulasi instruction SPL Token transfer (atau hanya dummy transfer kalau tidak ada akses pool real).
+
+NFT Mint: Simple mint ke address dummy mint (atau transfer ke account baru).
+
+Semua proses di atas pada dasarnya hanya soal membangun instruksi Solana [SystemProgram.transfer, TokenProgram.transfer, CreateAccount] dengan parameter berbeda.
+
+Observatory saat ini sudah memiliki backend untuk membangun dan mengirim Solana transaction; menambah opsi preset hanyalah soal menambah pilihan template pada transaction builder sebelum step buildGatewayTransaction().
+
+2. Gateway API Tidak Perlu Diubah
+Preset hanyalah alias/unified frontend untuk memudahkan user memilih instruksi apa yang akan dibenchmark.
+
+Sekali unsigned transaction dibangun sesuai template, pipeline Observatory tetap:
+
+Build → request tip instruction → buildGatewayTransaction → sign → sendTransaction.
+
+Gateway API tetap menerima “transaction” dalam format base64, apapun instruksinya (Selama native Solana transaction & tidak membutuhkan off-chain logic spesifik seperti order matching DEX sungguhan).
+
+3. Perubahan Kecil, Dampak Besar
+Tambahkan dropdown/menu di frontend: Pilih “Simulasi Airdrop”, “NFT Mint”, dsb.
+
+Backend men-generate unsigned transaction sesuai skenario preset.
+
+Semua pipeline selanjutnya tetap berjalan normal—cukup modular pada function transaction builder.
+
+Skema API & Flow (Simpel)
+Frontend
+
+POST /benchmarks dengan {preset: "airdrop", params: {recipient, amount}}
+
+Backend route
+
+if preset === "airdrop", panggil helper buildAirdropTransaction(params)
+
+if preset === "nftMint", panggil helper buildMintTransaction(params)
+
+dst.
+
+Transaksi yang dibangun dikirim lewat fungsi existing ke Gateway seperti biasa
+
+buildGatewayTransaction()
+
+getTipInstructions()
+
+signTransaction()
+
+sendTransaction()
+
+Contoh Implementasi (Pseudocode / Sederhana)
+ts
+// frontend
+const handlePresetSelect = (preset) => {
+  // show custom inputs if needed (recipient, etc)
+  const params = getParamsFromUI(preset);
+  fetch("/api/benchmarks", {
+    method: "POST",
+    body: JSON.stringify({ preset, params })
+  })
+}
+
+// backend
+app.post("/api/benchmarks", async (req, res) => {
+  const { preset, params } = req.body;
+  let instructions;
+
+  if (preset === "airdrop") {
+    instructions = [SystemProgram.transfer({
+      fromPubkey,
+      toPubkey: params.recipient,
+      lamports: params.amount
+    })];
+  } else if (preset === "nftMint") {
+    instructions = buildMintInstructions(params);
+  }
+  // ...dll
+
+  const unsignedTx = buildTransaction(instructions);
+  // lanjutkan ke pipeline Gateway
+});
+Tips:
+Gunakan lite mode simulasi pada preset DEX/NFT (misal, transfer SPL Token saja, tidak perlu integrasi dengan protocol pool) agar tidak terlalu kompleks dalam waktu singkat.
+
+Sertakan preset label dan deskripsi singkat pada UI supaya juri/user tahu apa yang dibenchmark.
+
+Demo kan live di mainnet untuk menunjukkan real impact—itu yang membuat Observatory standout.
+

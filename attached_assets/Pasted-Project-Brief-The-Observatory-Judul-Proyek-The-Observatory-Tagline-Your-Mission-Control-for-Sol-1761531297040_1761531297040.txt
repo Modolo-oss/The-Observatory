@@ -1,0 +1,98 @@
+Project Brief: The Observatory
+Judul Proyek: The Observatory
+Tagline: Your Mission Control for Solana Transactions.
+
+1. Executive Summary (Elevator Pitch)
+"The Observatory" adalah sebuah dasbor SaaS (Software-as-a-Service) yang dibangun secara eksklusif di atas Sanctum Gateway. Proyek ini memberdayakan tim developer besar, CTO, dan manajer produk untuk memvisualisasikan, menganalisis, dan—yang paling penting—mengontrol secara real-time strategi pengiriman transaksi mereka di Solana. Daripada mengandalkan tebakan atau perubahan kode yang berisiko, tim dapat menggunakan antarmuka visual The Observatory untuk merutekan transaksi, menyeimbangkan beban antara RPC dan Jito, dan mengoptimalkan biaya secara dinamis, semuanya tanpa satu baris pun code redeployment. The Observatory mengubah manajemen transaksi dari sebuah seni misterius menjadi ilmu yang presisi dan dapat dikontrol.
+
+2. Problem Statement (Masalah yang Dipecahkan)
+Tim yang menjalankan aplikasi berskala tinggi di Solana menghadapi masalah operasional yang konstan dan mahal:
+
+Ketidakpastian Kinerja RPC: RPC publik bisa tidak andal, sementara RPC berbayar mahal. Memilih yang terbaik adalah sebuah tebakan, dan berganti RPC memerlukan perubahan konfigurasi dan redeploy.
+Optimalisasi Biaya yang Rumit: Kapan harus menggunakan Jito Bundles untuk jaminan eksekusi? Kapan cukup dengan RPC biasa? Menggunakan keduanya secara bersamaan untuk menghemat biaya (mendapatkan refund Jito tip jika via RPC berhasil) membutuhkan logika kustom yang rumit.
+Kurangnya Visibilitas: Ketika transaksi gagal, developer menghabiskan waktu berjam-jam untuk menelusuri log dan explorer. Tidak ada satu tempat untuk melihat kinerja semua metode pengiriman transaksi secara berdampingan.
+Siklus Iterasi yang Lambat: Mengubah strategi pengiriman—misalnya, mengalihkan 20% traffic ke RPC baru untuk pengujian—memerlukan perubahan kode, review, dan proses deployment yang bisa memakan waktu berjam-jam atau berhari-hari, menimbulkan risiko dan kelambatan.
+3. The Solution: The Observatory
+The Observatory adalah lapisan kontrol dan visualisasi di atas API Sanctum Gateway. Setelah tim mengintegrasikan endpoint tunggal dari The Observatory ke dalam aplikasi mereka, mereka mendapatkan kekuatan penuh Gateway melalui sebuah dasbor web yang intuitif.
+
+Fitur Unggulan (Core Features):
+
+Visual Route Builder:
+
+Deskripsi: Antarmuka drag-and-drop di mana pengguna dapat membangun alur logika untuk transaksi mereka. Pengguna dapat menarik "node" seperti RPC A, RPC B, Jito Bundles, dan Sanctum Sender.
+Fungsi: Pengguna menghubungkan node-node ini dan menggunakan slider untuk menentukan bobot probabilitas (weight) untuk setiap rute. Contoh: "Kirim 70% transaksi ke RPC A, 30% ke Jito".
+Fitur Gateway yang Digunakan: Round Robin Functionality untuk transaction routing.
+Live Parameter Tuning (Fitur Kunci untuk Menang):
+
+Deskripsi: Bagian paling magis dari dasbor. Seorang CTO melihat bahwa RPC A sedang melambat. Ia masuk ke The Observatory, menggeser slider bobot untuk RPC A dari 70% menjadi 0%, dan menaikkan Jito menjadi 100%.
+Fungsi: Saat tombol "Apply Changes" ditekan, backend The Observatory secara instan memanggil API Gateway untuk memperbarui konfigurasi routing. Semua transaksi dari aplikasi mereka seketika dialihkan sesuai aturan baru.
+Fitur Gateway yang Digunakan: Ini adalah manifestasi dari janji utama Gateway: "change parameters without any code redeployment."
+Real-Time Analytics & Benchmarking Dashboard:
+
+Deskripsi: Sebuah dasbor grafik yang menampilkan metrik-metrik penting yang diambil dari Observability Suite Gateway.
+Fungsi: Visualisasi data per rute (RPC A vs. Jito, dll.) untuk metrik berikut:
+Tingkat Keberhasilan Transaksi (%)
+Waktu Konfirmasi Rata-rata (ms)
+Biaya per Transaksi Rata-rata (SOL)
+Total Jito Tips yang Di-refund ($$$): Ini adalah metrik "Real Win" yang menunjukkan penghematan biaya secara langsung.
+Fitur Gateway yang Digunakan: Observability Suite yang kaya data.
+Smart Alerting System:
+
+Deskripsi: Pengguna dapat mengonfigurasi peringatan berbasis ambang batas (threshold).
+Fungsi: Contoh aturan: "Kirim notifikasi ke Slack channel #devops jika Tingkat Keberhasilan untuk RPC A turun di bawah 90% selama 5 menit." atau "Beri tahu saya jika Jito Tips Refunded mencapai $100 hari ini."
+Fitur Gateway yang Digunakan: Ekstensi logis dari Observability Suite.
+4. Arsitektur Teknis dan Alur Data
+Arsitektur ini terdiri dari tiga komponen utama yang berkomunikasi satu sama lain.
+
+
++----------------+      +-----------------------+      +--------------------+      +----------+
+|                |      |                       |      |                    |      |          |
+| dApp Pengguna  |----->|   The Observatory API |----->|  Sanctum Gateway   |----->|  Solana  |
+| (Frontend/Backend) |      |   (Backend - Node.js) |      |      (API)         |      |          |
+|                |      |                       |      |                    |      |          |
++----------------+      +-----------+-----------+      +--------------------+      +----------+
+                                  ^   |
+                                  |   | (Menyimpan/Membaca Konfigurasi)
+                                  v   |
+                          +-----------+-----------+
+                          |                       |
+                          |      Database         |
+                          |    (PostgreSQL)       |
+                          +-----------------------+
+                                  ^
+                                  |
++-----------------------+         |
+|                       |         |
+| Dasbor The Observatory|---------+
+|   (Frontend - React)  |
+|                       |
++-----------------------+
+Alur Data (Data Flow):
+
+Onboarding:
+
+Pengguna (CTO/Developer) mendaftar di The Observatory dan memasukkan API Key Sanctum Gateway mereka (disimpan secara terenkripsi di Database).
+The Observatory memberikan satu endpoint API unik dan API key untuk tim tersebut.
+Developer dApp hanya perlu mengubah kode mereka satu kali: semua panggilan sendTransaction sekarang diarahkan ke endpoint API The Observatory, bukan langsung ke RPC atau Gateway.
+Konfigurasi (di Dasbor):
+
+Pengguna menggunakan Visual Route Builder untuk membuat strategi routing (misal: 70% RPC, 30% Jito).
+Konfigurasi ini disimpan di Database The Observatory (misalnya, dalam format JSON yang terasosiasi dengan API key pengguna).
+Eksekusi Transaksi (Live):
+
+dApp Pengguna mengirimkan raw transaction ke The Observatory API.
+Backend The Observatory menerima transaksi, mengambil konfigurasi routing dari Database.
+Backend The Observatory kemudian memformat dan meneruskan panggilan ke Sanctum Gateway API sesuai dengan strategi yang telah ditentukan (menggunakan buildGatewayTransaction dengan bobot yang benar).
+Observasi dan Iterasi (Siklus Umpan Balik):
+
+Frontend Dasbor secara berkala mengambil data konfigurasi dan data analitik dari backend The Observatory (yang pada gilirannya mengambil dari Gateway).
+Pengguna melihat masalah di dasbor (misalnya, RPC lambat).
+Pengguna mengubah bobot di Dasbor. Perubahan disimpan ke Database.
+Pada transaksi berikutnya yang masuk ke The Observatory API, konfigurasi baru akan langsung digunakan. Siklus selesai tanpa redeploy.
+5. Strategi Kemenangan Hackathon
+Penuhi Semua Kriteria:
+
+Integrasi Gateway: Proyek ini adalah meta-layer di atas Gateway. Ia menggunakan buildGatewayTransaction + sendTransaction secara dinamis, Observability Suite, dan Round Robin.
+Dokumentasi & Tweet: Demo video akan sangat dramatis. Tunjukkan alur: lihat masalah di dasbor -> ubah slider -> tunjukkan log server bahwa strategi berubah -> masalah teratasi. Tweetnya: "Why guess your Solana transaction strategy? We built The Observatory on @SanctumSo Gateway. Visualize, benchmark, & CHANGE routing logic (RPC vs. Jito) in real-time with ZERO redeploys. This is Mission Control for your dApp. 🚀 #Solana"
+Tooling/UI Tambahan: Seluruh proyek adalah tooling dan UI canggih di atas Gateway.
+Diferensiasi: Proyek ini tidak hanya menggunakan Gateway, tetapi memperkuat dan memvisualisasikan proposisi nilai terdalam dari Gateway, menjadikannya sangat menarik bagi sponsor dan juri. Ini menunjukkan pemahaman tingkat sistem tentang masalah yang diselesaikan Sanctum.

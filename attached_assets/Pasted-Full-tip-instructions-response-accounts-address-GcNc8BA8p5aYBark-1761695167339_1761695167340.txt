@@ -1,0 +1,71 @@
+Full tip instructions response: [
+  {
+    "accounts": [
+      {
+        "address": "GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2",
+        "role": 3,
+        "signer": {
+          "address": "GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2"
+        }
+      },
+      {
+        "address": "9fBpwxcudpLyJskhiiKmU8wPszeUuCB8sSjhPi44QuFb",
+        "role": 1
+      }
+    ],
+    "programAddress": "11111111111111111111111111111111",
+    "data": {
+      "0": 2,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 80,
+      "5": 195,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0
+    }
+  },
+  {
+    "accounts": [
+      {
+        "address": "GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2",
+        "role": 3,
+        "signer": {
+          "address": "GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2"
+        }
+      },
+      {
+        "address": "49iMaeMNdyFYWXFo6mbkT7jew2X8F6QR4b8GXpbafRpg",
+        "role": 1
+      }
+    ],
+    "programAddress": "11111111111111111111111111111111",
+    "data": {
+      "0": 2,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 32,
+      "5": 161,
+      "6": 7,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0
+    }
+  }
+]
+injected.js:27 Processing instruction #0: Objectaccounts: (2) [{…}, {…}]data: {0: 2, 1: 0, 2: 0, 3: 0, 4: 80, 5: 195, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}programAddress: "11111111111111111111111111111111"[[Prototype]]: Object
+injected.js:27 Accounts for instruction #0: Array(2)
+injected.js:27   Account 0: Objectaddress: "GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2"computed_isSigner: truecomputed_isWritable: truehasSigner: truerole: 3[[Prototype]]: Object
+injected.js:27   Account 1: Objectaddress: "9fBpwxcudpLyJskhiiKmU8wPszeUuCB8sSjhPi44QuFb"computed_isSigner: falsecomputed_isWritable: truehasSigner: falserole: 1[[Prototype]]: Object
+injected.js:27 Processing instruction #1: Objectaccounts: (2) [{…}, {…}]data: {0: 2, 1: 0, 2: 0, 3: 0, 4: 32, 5: 161, 6: 7, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}programAddress: "11111111111111111111111111111111"[[Prototype]]: Object
+injected.js:27 Accounts for instruction #1: Array(2)0: {address: 'GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2', role: 3, signer: {…}}1: {address: '49iMaeMNdyFYWXFo6mbkT7jew2X8F6QR4b8GXpbafRpg', role: 1}length: 2[[Prototype]]: Array(0)
+injected.js:27   Account 0: Objectaddress: "GcNc8BA8p5aYBark3mmQGmNshWrATMg5FVFhEvzd8TJ2"computed_isSigner: truecomputed_isWritable: truehasSigner: truerole: 3[[Prototype]]: Object
+injected.js:27   Account 1: Objectaddress: "49iMaeMNdyFYWXFo6mbkT7jew2X8F6QR4b8GXpbafRpg"computed_isSigner: falsecomputed_isWritable: truehasSigner: falserole: 1[[Prototype]]: Object
+injected.js:27 Signing transaction with tip instructions...

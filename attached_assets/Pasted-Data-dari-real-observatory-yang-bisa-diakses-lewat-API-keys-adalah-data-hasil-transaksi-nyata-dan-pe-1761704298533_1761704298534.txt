@@ -1,0 +1,67 @@
+Data dari real observatory—yang bisa diakses lewat API keys—adalah data hasil transaksi nyata dan performa integrasi Gateway dalam sistem observatory kamu. Berikut gambaran jenis data real yang relevan dan bisa dipakai sebagai API endpoint:
+
+Jenis Data Real Observatory untuk API Keys
+Transaction Metrics
+
+Total dan detail setiap transaksi yang dikirim dari observatory ke Gateway/Solana (timestamp, tx hash, success/failure).​
+
+Success rate (persentase transaksi berhasil/gagal).
+
+Error codes dan minimal log event khusus (jika terjadi transaksi gagal).
+
+Performance Metrics
+
+Latency (berapa lama waktu proses satu transaksi dari submit ke confirmation).
+
+Average cost per transaction (SOL/fee yang terpakai dalam benchmark).
+
+Comparison data: Latency dan biaya via Gateway vs RPC tradisional.
+
+Benchmark Results
+
+Hasil run benchmark terakhir (misal: 30 transaksi). Ada data tabel: success rate, latency, fee, throughput.
+
+Rekap summary: min/avg/max latency, min/avg/max fee.
+
+Configuration/Route Status
+
+(Jika bisa) Informasi config aktif untuk Gateway yang dipakai (versi, endpoint, region).
+
+Contoh Response API yang Bisa Diakses dengan API Keys
+json
+{
+  "benchmark_id": "run_20251028_01",
+  "run_timestamp": "2025-10-28T09:00:00Z",
+  "transaction_count": 30,
+  "success_count": 28,
+  "failed_count": 2,
+  "metrics": {
+    "avg_latency_ms": 450,
+    "min_latency_ms": 320,
+    "max_latency_ms": 1010,
+    "avg_fee_sol": 0.0003,
+    "min_fee_sol": 0.00025,
+    "max_fee_sol": 0.00035
+  },
+  "transactions": [
+    {
+      "tx_hash": "4Fa9b...",
+      "status": "success",
+      "latency_ms": 345,
+      "fee_sol": 0.0003
+    },
+    {
+      "tx_hash": "8Geez...",
+      "status": "fail",
+      "error_code": "RPC_TIMEOUT",
+      "latency_ms": 980,
+      "fee_sol": 0.0003
+    }
+  ]
+}
+Kapan API Keys Layak Di-Improve
+Kalau data seperti di atas benar-benar sudah tersedia di database observatory (bukan mock/hardcoded), API Keys bisa di-"improve" agar developer bisa akses data realtime/terakhir lewat endpoint.​
+
+Kalau belum ada pipeline atau semuanya masih mockup, fitur sebaiknya skip.
+
+Jadi, data real observatory = hasil transaksi, performa, benchmark nyata, dan statistik dari database observatory yang sudah terisi hasil live run. API Keys dipakai buat akses data ini secara programatis oleh team/dev lain/automasi.
