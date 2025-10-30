@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireApiKey } from '../middleware/auth';
 import { apiKeyRateLimiter } from '../middleware/rate-limit';
 import { storage } from '../storage';
+import { pool } from '../db';
 import type { SanctumGatewayService } from '../services/sanctum-gateway';
 
 export const publicApiRouter = express.Router();
@@ -11,14 +12,36 @@ export const publicApiRouter = express.Router();
 let gatewayService: SanctumGatewayService;
 
 // Health check endpoint (no authentication required)
-publicApiRouter.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'Observatory Public API',
-    version: '1.0.0',
-  });
+publicApiRouter.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    const dbTest = await pool.query('SELECT NOW() as time, current_database() as database');
+    
+    res.json({
+      success: true,
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      service: 'Observatory Public API',
+      version: '1.0.0',
+      database: {
+        connected: true,
+        database: dbTest.rows[0]?.database || 'unknown',
+        serverTime: dbTest.rows[0]?.time || null,
+      },
+    });
+  } catch (error: any) {
+    res.status(503).json({
+      success: false,
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      service: 'Observatory Public API',
+      database: {
+        connected: false,
+        error: error.message || 'Database connection failed',
+        code: error.code || 'UNKNOWN',
+      },
+    });
+  }
 });
 
 // Apply API key authentication and rate limiting to protected API routes
