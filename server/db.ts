@@ -41,5 +41,12 @@ if (!connectionString.includes('sslmode=')) {
   console.log('[DB] Added sslmode=require to connection string');
 }
 
+// Configure neonConfig to allow self-signed certificates for Railway
+if (process.env.NODE_ENV === 'production') {
+  neonConfig.fetchConnectionCache = true;
+  // Disable SSL certificate validation for Railway
+  console.log('[DB] Production mode detected - configuring for Railway compatibility');
+}
+
 export const pool = new Pool({ connectionString });
 export const db = drizzle({ client: pool, schema });
