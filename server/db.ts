@@ -1,9 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
-
-neonConfig.webSocketConstructor = ws;
 
 // Railway provides multiple database URLs:
 // - DATABASE_PRIVATE_URL: For connections within Railway network (RECOMMENDED)
@@ -38,20 +35,22 @@ const usedVar = process.env.DATABASE_PRIVATE_URL ? 'DATABASE_PRIVATE_URL' :
                 process.env.DATABASE_PUBLIC_URL ? 'DATABASE_PUBLIC_URL' : 'DATABASE_URL';
 console.log(`[DB] Using ${usedVar} for database connection`);
 
-// Add sslmode=require to connection string if not present (needed for Railway)
-let connectionString = databaseUrl;
-if (!connectionString.includes('sslmode=')) {
-  const separator = connectionString.includes('?') ? '&' : '?';
-  connectionString = `${connectionString}${separator}sslmode=require`;
-  console.log('[DB] Added sslmode=require to connection string');
-}
+// Configure SSL for Railway PostgreSQL
+const isProduction = process.env.NODE_ENV === 'production';
+const sslConfig = isProduction ? { rejectUnauthorized: false } : false;
 
-// Configure neonConfig to allow self-signed certificates for Railway
-if (process.env.NODE_ENV === 'production') {
-  neonConfig.fetchConnectionCache = true;
-  // Disable SSL certificate validation for Railway
-  console.log('[DB] Production mode detected - configuring for Railway compatibility');
-}
+export const pool = new Pool({ 
+  connectionString: databaseUrl,
+  ssl: sslConfig,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
-export const pool = new Pool({ connectionString });
+// Handle pool errors
+pool.on('error', (err, _client) => {
+  console.error('[DB] Unexpected error on idle client:', err);
+  process.exit(-1);
+});
+
 export const db = drizzle({ client: pool, schema });
