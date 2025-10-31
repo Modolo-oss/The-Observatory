@@ -1,6 +1,7 @@
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
+import { sql } from "drizzle-orm";
 
 // Railway provides multiple database URLs:
 // - DATABASE_PRIVATE_URL: For connections within Railway network (RECOMMENDED)
@@ -54,3 +55,52 @@ pool.on('error', (err, _client) => {
 });
 
 export const db = drizzle({ client: pool, schema });
+
+// Function to create tables if they don't exist (auto-migration)
+export async function createTablesIfNotExist() {
+  try {
+    console.log('[DB] Checking if tables exist...');
+    
+    // Check if any table exists by querying information_schema
+    const result = await pool.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      LIMIT 1
+    `);
+    
+    if (result.rows.length === 0) {
+      console.log('[DB] No tables found, creating tables...');
+      
+      // Get all SQL CREATE TABLE statements from drizzle-kit
+      // We need to use drizzle-kit's introspection or create tables manually
+      // For now, let's use a simple approach: try to query a table and catch error
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+          email TEXT NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          name TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'user',
+          is_active BOOLEAN NOT NULL DEFAULT true,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        );
+        
+        CREATE TABLE IF NOT EXISTS session (
+          sid VARCHAR NOT NULL COLLATE "default",
+          sess JSON NOT NULL,
+          expire TIMESTAMP(6) NOT NULL
+        );
+        ALTER TABLE session ADD CONSTRAINT session_pkey PRIMARY KEY (sid);
+      `);
+      
+      console.log('[DB] Basic tables created. Full migration may be needed.');
+    } else {
+      console.log('[DB] Tables already exist');
+    }
+  } catch (error: any) {
+    console.error('[DB] Error creating tables:', error.message);
+    // Don't exit, let the server try to start anyway
+  }
+}

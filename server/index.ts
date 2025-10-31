@@ -7,7 +7,7 @@ import { transactionSimulator } from "./simulator";
 import { storage } from "./storage";
 import { alertMonitor } from "./services/alert-monitor";
 import { AutoPilot } from "./services/auto-pilot";
-import { pool } from "./db";
+import { pool, createTablesIfNotExist } from "./db";
 import bcrypt from "bcrypt";
 import type { InsertUser } from "@shared/schema";
 
@@ -106,6 +106,15 @@ app.use((req, res, next) => {
     }
 
     log("[Server] Environment variables OK, starting server...");
+    
+    // Create tables if they don't exist (auto-migration for Railway)
+    try {
+      await createTablesIfNotExist();
+    } catch (error: any) {
+      log(`[Server] Warning: Could not create tables: ${error.message}`);
+      log("[Server] Continuing anyway - you may need to run manual migration");
+    }
+    
     const server = await registerRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
