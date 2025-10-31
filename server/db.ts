@@ -33,5 +33,13 @@ if (!databaseUrl) {
 // Log which URL is being used (without exposing the actual URL)
 console.log(`[DB] Using ${process.env.DATABASE_PUBLIC_URL ? 'DATABASE_PUBLIC_URL' : 'DATABASE_URL'} for database connection`);
 
-export const pool = new Pool({ connectionString: databaseUrl });
+// Add sslmode=require to connection string if not present (needed for Railway)
+let connectionString = databaseUrl;
+if (!connectionString.includes('sslmode=')) {
+  const separator = connectionString.includes('?') ? '&' : '?';
+  connectionString = `${connectionString}${separator}sslmode=require`;
+  console.log('[DB] Added sslmode=require to connection string');
+}
+
+export const pool = new Pool({ connectionString });
 export const db = drizzle({ client: pool, schema });
